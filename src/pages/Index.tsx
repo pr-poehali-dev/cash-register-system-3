@@ -110,6 +110,34 @@ const Index = () => {
   const [newProduct, setNewProduct] = useState({ sku: '', name: '', price: '', category: '', icon: 'Box' });
   const [posSearch, setPosSearch] = useState('');
 
+  // Call staff
+  const [callOpen, setCallOpen] = useState(false);
+  const [callEmail, setCallEmail] = useState('');
+  const [callMsg, setCallMsg] = useState('');
+  const [callSending, setCallSending] = useState(false);
+  const [callDone, setCallDone] = useState(false);
+  const [callError, setCallError] = useState('');
+
+  const sendCall = async () => {
+    if (!callEmail) { setCallError('Введите email'); return; }
+    setCallSending(true);
+    setCallError('');
+    try {
+      const res = await fetch('https://functions.poehali.dev/0238b0d3-e6af-46b1-8496-ec12e4125318', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: callMsg || 'Требуется помощь на кассе', cashier: 'Анна Петрова', location: 'Касса №1', email: callEmail }),
+      });
+      if (!res.ok) throw new Error();
+      setCallDone(true);
+      setTimeout(() => { setCallOpen(false); setCallDone(false); setCallEmail(''); setCallMsg(''); }, 2000);
+    } catch {
+      setCallError('Ошибка отправки. Проверьте настройки SMTP.');
+    } finally {
+      setCallSending(false);
+    }
+  };
+
   // Settings PIN
   const [pinChangeOpen, setPinChangeOpen] = useState(false);
   const [pinForm, setPinForm] = useState({ current: '', next: '', confirm: '' });
@@ -360,6 +388,13 @@ const Index = () => {
                   <Icon name="CreditCard" size={20} />
                   Оплатить
                 </Button>
+                <button
+                  onClick={() => { setCallOpen(true); setCallDone(false); setCallError(''); }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-sm text-muted-foreground hover:border-destructive hover:text-destructive transition-all"
+                >
+                  <Icon name="BellRing" size={16} />
+                  Вызвать сотрудника
+                </button>
               </div>
             </div>
           </>
@@ -667,6 +702,52 @@ const Index = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Call Staff Dialog */}
+      <Dialog open={callOpen} onOpenChange={setCallOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><Icon name="BellRing" size={20} className="text-destructive" />Вызов сотрудника</DialogTitle></DialogHeader>
+          {callDone ? (
+            <div className="py-6 flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <Icon name="Check" size={28} className="text-primary" />
+              </div>
+              <p className="font-semibold">Вызов отправлен!</p>
+              <p className="text-sm text-muted-foreground">Письмо отправлено на указанный email</p>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-2">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Email для уведомления</label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="manager@mail.ru"
+                  value={callEmail}
+                  onChange={(e) => setCallEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Сообщение <span className="text-muted-foreground font-normal">(необязательно)</span></label>
+                <input
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Требуется помощь на кассе"
+                  value={callMsg}
+                  onChange={(e) => setCallMsg(e.target.value)}
+                />
+              </div>
+              {callError && <p className="text-sm text-destructive">{callError}</p>}
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" className="flex-1" onClick={() => setCallOpen(false)}>Отмена</Button>
+                <Button variant="destructive" className="flex-1 gap-2" onClick={sendCall} disabled={callSending}>
+                  {callSending ? <Icon name="Loader2" size={16} className="animate-spin" /> : <Icon name="BellRing" size={16} />}
+                  {callSending ? 'Отправка…' : 'Вызвать'}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
