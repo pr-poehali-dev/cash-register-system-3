@@ -237,35 +237,30 @@ const Index = () => {
         {section === 'pos' && (
           <>
             <div className="flex-1 flex flex-col overflow-hidden">
-              <header className="h-20 flex items-center justify-between px-6 lg:px-8 border-b border-border">
-                <div>
+              <header className="h-20 flex items-center gap-4 px-6 lg:px-8 border-b border-border">
+                <div className="shrink-0">
                   <h1 className="text-xl font-semibold tracking-tight">Новая продажа</h1>
                   <p className="text-sm text-muted-foreground">Выберите товары</p>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary text-sm font-mono">
+                <div className="flex-1 relative">
+                  <Icon name="Search" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <input
+                    className="w-full pl-11 pr-10 py-2.5 rounded-xl border border-border bg-secondary text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Поиск по названию, категории или артикулу…"
+                    value={posSearch}
+                    onChange={(e) => setPosSearch(e.target.value)}
+                  />
+                  {posSearch && (
+                    <button onClick={() => setPosSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                      <Icon name="X" size={16} />
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary text-sm font-mono shrink-0">
                   <Icon name="Clock" size={16} className="text-muted-foreground" />
                   Смена открыта
                 </div>
               </header>
-
-              {products.length > 0 && (
-                <div className="px-6 lg:px-8 pt-5">
-                  <div className="relative">
-                    <Icon name="Search" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                    <input
-                      className="w-full pl-11 pr-10 py-3 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Поиск товара по названию, категории или артикулу…"
-                      value={posSearch}
-                      onChange={(e) => setPosSearch(e.target.value)}
-                    />
-                    {posSearch && (
-                      <button onClick={() => setPosSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                        <Icon name="X" size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
 
               <div className="flex-1 overflow-y-auto p-6 lg:p-8 pt-4">
                 {products.length === 0 ? (
