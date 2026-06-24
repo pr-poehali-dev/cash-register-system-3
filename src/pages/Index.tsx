@@ -171,20 +171,25 @@ const Index = () => {
               </div>
 
               <div className="flex-1 overflow-y-auto p-6 lg:p-8 pt-5">
-                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="space-y-3">
                   {filtered.map((p, i) => (
                     <button
                       key={p.id}
                       onClick={() => add(p)}
                       style={{ animationDelay: `${i * 30}ms` }}
-                      className="animate-fade-in group bg-card border border-border rounded-2xl p-5 text-left hover:border-primary hover:shadow-lg transition-all active:scale-95"
+                      className="animate-fade-in group w-full flex items-center gap-4 bg-card border border-border rounded-2xl p-4 text-left hover:border-primary hover:shadow-lg transition-all active:scale-[0.99]"
                     >
-                      <div className="w-12 h-12 rounded-xl bg-accent text-accent-foreground flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <div className="w-12 h-12 rounded-xl bg-accent text-accent-foreground flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                         <Icon name={p.icon} size={24} fallback="Box" />
                       </div>
-                      <p className="font-medium leading-tight mb-1">{p.name}</p>
-                      <p className="text-sm text-muted-foreground mb-3">{p.category}</p>
-                      <p className="font-mono font-semibold text-lg">{p.price} ₽</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium leading-tight truncate">{p.name}</p>
+                        <p className="text-sm text-muted-foreground">{p.category}</p>
+                      </div>
+                      <p className="font-mono font-semibold text-lg shrink-0">{p.price} ₽</p>
+                      <div className="w-9 h-9 rounded-lg bg-secondary group-hover:bg-primary group-hover:text-primary-foreground flex items-center justify-center shrink-0 transition-colors">
+                        <Icon name="Plus" size={18} />
+                      </div>
                     </button>
                   ))}
                 </div>
