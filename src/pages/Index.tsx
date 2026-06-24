@@ -12,6 +12,7 @@ type Section = 'pos' | 'catalog' | 'users' | 'settings';
 
 interface Product {
   id: number;
+  sku: string;
   name: string;
   price: number;
   category: string;
@@ -106,7 +107,8 @@ const Index = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', category: '', icon: 'Box' });
+  const [newProduct, setNewProduct] = useState({ sku: '', name: '', price: '', category: '', icon: 'Box' });
+  const [posSearch, setPosSearch] = useState('');
 
   // Settings PIN
   const [pinChangeOpen, setPinChangeOpen] = useState(false);
@@ -117,9 +119,17 @@ const Index = () => {
   const filteredCatalog = useMemo(() => {
     const q = search.toLowerCase();
     return products.filter((p) =>
-      p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+      p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
     );
   }, [search, products]);
+
+  const filteredPos = useMemo(() => {
+    const q = posSearch.toLowerCase();
+    if (!q) return products;
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+    );
+  }, [posSearch, products]);
 
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const count = cart.reduce((s, i) => s + i.qty, 0);
@@ -140,17 +150,20 @@ const Index = () => {
   const newSale = () => { setCart([]); setReceiptOpen(false); };
   const receiptNo = useMemo(() => Math.floor(10000 + Math.random() * 89999), [receiptOpen]);
 
+  const genSku = () => 'SKU-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+
   const createProduct = () => {
     if (!newProduct.name || !newProduct.price) return;
     const p: Product = {
       id: Date.now(),
+      sku: newProduct.sku || genSku(),
       name: newProduct.name,
       price: Number(newProduct.price),
       category: newProduct.category || 'Прочее',
       icon: newProduct.icon,
     };
     setProducts((prev) => [...prev, p]);
-    setNewProduct({ name: '', price: '', category: '', icon: 'Box' });
+    setNewProduct({ sku: '', name: '', price: '', category: '', icon: 'Box' });
     setCreateOpen(false);
   };
 
@@ -235,7 +248,26 @@ const Index = () => {
                 </div>
               </header>
 
-              <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+              {products.length > 0 && (
+                <div className="px-6 lg:px-8 pt-5">
+                  <div className="relative">
+                    <Icon name="Search" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <input
+                      className="w-full pl-11 pr-10 py-3 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Поиск товара по названию, категории или артикулу…"
+                      value={posSearch}
+                      onChange={(e) => setPosSearch(e.target.value)}
+                    />
+                    {posSearch && (
+                      <button onClick={() => setPosSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                        <Icon name="X" size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex-1 overflow-y-auto p-6 lg:p-8 pt-4">
                 {products.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
                     <Icon name="Package" size={48} className="mb-4 opacity-20" />
@@ -246,9 +278,15 @@ const Index = () => {
                       Перейти в Настройки
                     </Button>
                   </div>
+                ) : filteredPos.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
+                    <Icon name="SearchX" size={40} className="mb-3 opacity-30" />
+                    <p className="font-medium">Ничего не найдено</p>
+                    <p className="text-sm mt-1">Попробуйте другой запрос</p>
+                  </div>
                 ) : (
                   <div className="space-y-3">
-                    {products.map((p, i) => (
+                    {filteredPos.map((p, i) => (
                       <button
                         key={p.id}
                         onClick={() => add(p)}
@@ -361,7 +399,7 @@ const Index = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{p.name}</p>
-                        <p className="text-sm text-muted-foreground">{p.category}</p>
+                        <p className="text-xs text-muted-foreground font-mono">{p.sku} · {p.category}</p>
                       </div>
                       <p className="font-mono font-semibold">{p.price} ₽</p>
                       <button onClick={() => setDeleteId(p.id)} className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
@@ -440,7 +478,7 @@ const Index = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate">{p.name}</p>
-                            <p className="text-xs text-muted-foreground">{p.category}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{p.sku} · {p.category}</p>
                           </div>
                           <p className="font-mono text-sm font-semibold">{p.price} ₽</p>
                           <button onClick={() => setDeleteId(p.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
@@ -566,6 +604,25 @@ const Index = () => {
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Новый товар</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Артикул (SKU)</label>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 px-4 py-3 rounded-xl border border-border bg-secondary text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="SKU-XXXXX"
+                  value={newProduct.sku}
+                  onChange={(e) => setNewProduct((v) => ({ ...v, sku: e.target.value }))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setNewProduct((v) => ({ ...v, sku: genSku() }))}
+                  className="px-4 py-3 rounded-xl border border-border bg-secondary text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors whitespace-nowrap"
+                >
+                  Авто
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Оставьте пустым — артикул сгенерируется автоматически</p>
+            </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Название</label>
               <input
